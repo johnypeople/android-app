@@ -3,6 +3,7 @@ package com.livraria.controller
 import com.livraria.controller.request.PostCustomerRequest
 import com.livraria.controller.request.PutCustomerRequest
 import com.livraria.model.CustomerModel
+import com.livraria.service.CustomerService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,47 +19,37 @@ import javax.websocket.server.PathParam as PathParam1
 
 @RestController
 @RequestMapping("/customer")
-class CustomerController {
-    val customers = mutableListOf<CustomerModel>()
+class CustomerController (
+    val customerService : CustomerService
+){
+
 
     @GetMapping
     fun getAll(@RequestParam name: String?): List<CustomerModel> {
-        name?.let {
-            return customers.filter { it.name.contains(name, true)}
-        }
-        return customers
+        return customerService.getAll(name)
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@RequestBody customer: PostCustomerRequest){
-        val id = if(customers.isEmpty()){
-            1
-        } else {
-            customers.last().id.toInt()+1
-        }.toString()
-
-        customers.add(CustomerModel(id, customer.name, customer.email))
+        customerService.create(customer)
     }
 
-        @GetMapping("/{id}")
-        fun getCustomer(@PathVariable id: String): CustomerModel {
-            return customers.filter { it.id == id }.first()
-        }
+    @GetMapping("/{id}")
+    fun getCustomer(@PathVariable id: String): CustomerModel{
+        return customerService.getCustomer(id)
+    }
 
-        @PutMapping("/{id}")
-        @ResponseStatus(HttpStatus.NO_CONTENT)
-        fun update(@PathVariable id: String, @RequestBody customer: PutCustomerRequest) {
-            customers.filter { it.id == id }.first().let {
-                it.name = customer.name
-                it.email= customer.email
-            }
-        }
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun update(@PathVariable id: String, @RequestBody customer: PutCustomerRequest) {
+        customerService.update(id, customer)
+    }
 
-        @DeleteMapping("/{id}")
-        @ResponseStatus(HttpStatus.NO_CONTENT)
-        fun delete(@PathVariable id: String) {
-            customers.removeIf { it.id == id }
-        }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(@PathVariable id: String) {
+        customerService.delete(id)
+    }
 
 }
